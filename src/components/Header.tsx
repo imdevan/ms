@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Sun, Moon, Hash, Percent, Coffee, RotateCcw, Menu } from 'lucide-react';
+import { Sun, Moon, Hash, Percent, Coffee, RotateCcw, Menu, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { ScaleDial } from './ScaleDial';
 
 interface HeaderProps {
@@ -15,6 +15,8 @@ interface HeaderProps {
   onToggleTheme: () => void;
   hasRecipe: boolean;
   onOpenMenu?: () => void;
+  splitView?: boolean;
+  onToggleSplitView?: () => void;
 }
 
 interface TooltipButtonProps {
@@ -56,6 +58,8 @@ export function Header({
   onToggleTheme,
   hasRecipe,
   onOpenMenu,
+  splitView,
+  onToggleSplitView,
 }: HeaderProps) {
   return (
     <motion.header
@@ -110,6 +114,17 @@ export function Header({
 
                 <div className="w-px h-8 bg-border" />
               </motion.div>
+            )}
+
+            {hasRecipe && onToggleSplitView && (
+              <TooltipButton
+                onClick={onToggleSplitView}
+                tooltip={splitView ? 'Single view' : 'Side-by-side view'}
+                isActive={splitView}
+                testId="header-split-toggle"
+              >
+                {splitView ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+              </TooltipButton>
             )}
 
             <TooltipButton

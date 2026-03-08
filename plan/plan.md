@@ -12,7 +12,7 @@ Store updates you implement at the END of this document in `# Updates`
 
 # v2.1.0
 
-- [ ] 1 Toggle side-by-side
+- [x] 1 Toggle side-by-side
   ui
     - icon button in the header
     - add to the side bar settings display as well
@@ -44,4 +44,10 @@ Store updates you implement at the END of this document in `# Updates`
   
 # Updates
 
-
+## Task 1 - Toggle side-by-side (COMPLETED)
+- Added split view toggle button to Header (PanelLeft icon)
+- Added split view toggle to SideMenu settings
+- Implemented ResizablePanelGroup with recipe panel on left, notes on right
+- Added swap button to switch panel positions
+- Persisted splitView and panelOrder to localStorage
+- Split view only shows on desktop (not mobile)

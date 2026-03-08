@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, forwardRef } from 'react';
-import { X, Sun, Moon, RotateCcw, Hash, Percent, Coffee, Printer, Trash2 } from 'lucide-react';
+import { X, Sun, Moon, RotateCcw, Hash, Percent, Coffee, Printer, Trash2, PanelLeft } from 'lucide-react';
 import { ScaleDial } from './ScaleDial';
 
 interface SideMenuProps {
@@ -19,6 +19,8 @@ interface SideMenuProps {
   onPrint: () => void;
   onClearRecipe: () => void;
   isMobile: boolean;
+  splitView?: boolean;
+  onToggleSplitView?: () => void;
 }
 
 const ResetButtonMenu = forwardRef<HTMLButtonElement, { onClick: () => void }>(function ResetButtonMenu({ onClick }, ref) {
@@ -64,6 +66,8 @@ export function SideMenu({
   onPrint,
   onClearRecipe,
   isMobile,
+  splitView,
+  onToggleSplitView,
 }: SideMenuProps) {
   return (
     <AnimatePresence>
@@ -115,6 +119,27 @@ export function SideMenu({
                   <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     Display
                   </h3>
+
+                  {/* Split view toggle */}
+                  {onToggleSplitView && (
+                    <button
+                      onClick={onToggleSplitView}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+                      data-testid="split-view-toggle"
+                    >
+                      <div className="flex items-center gap-3">
+                        <PanelLeft className="w-5 h-5" />
+                        <span>Side-by-Side</span>
+                      </div>
+                      <div className={`w-12 h-7 rounded-full transition-colors ${splitView ? 'bg-primary' : 'bg-muted'} p-1`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-card shadow-sm"
+                          animate={{ x: splitView ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </button>
+                  )}
 
                   {/* Fractions toggle */}
                   <button

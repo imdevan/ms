@@ -10,6 +10,7 @@ import { NotesList } from '@/components/NotesList';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { ConversionMode } from '@/components/ConversionMode';
 import { ConversionPreview } from '@/components/ConversionPreview';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { parseRecipeText, parseInstructions, parseIngredientLine, type ParsedRecipe, type ParsedIngredient } from '@/lib/parser';
 import { isSingleMeasurement, parseSingleMeasurement, loadLastConversion, type ConversionInput } from '@/lib/conversion';
 import { encodeRecipeToHash, decodeRecipeFromHash, updateUrlWithTitle, getUrlHash, getUrlTitle } from '@/lib/state';
@@ -17,7 +18,7 @@ import { convertUnit, UNITS, formatNumber } from '@/lib/units';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { RotateCcw, Share2 } from 'lucide-react';
+import { RotateCcw, Share2, ArrowLeftRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Index() {
@@ -34,6 +35,14 @@ export default function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isResetSpinning, setIsResetSpinning] = useState(false);
   
+  // Split view state
+  const [splitView, setSplitView] = useState(() => {
+    try { return localStorage.getItem('splitView') === 'true'; } catch { return false; }
+  });
+  const [panelOrder, setPanelOrder] = useState<'recipe-notes' | 'notes-recipe'>(() => {
+    try { return (localStorage.getItem('panelOrder') as any) || 'recipe-notes'; } catch { return 'recipe-notes'; }
+  });
+  
   // Conversion mode state
   const [isConversionMode, setIsConversionMode] = useState(false);
   const [conversionInput, setConversionInput] = useState<ConversionInput>(loadLastConversion);
@@ -44,6 +53,22 @@ export default function Index() {
   const isMobile = useIsMobile();
 
   const hasRecipe = recipe.sections.length > 0;
+
+  // Persist split view settings
+  useEffect(() => {
+    try { localStorage.setItem('splitView', String(splitView)); } catch {}
+  }, [splitView]);
+  useEffect(() => {
+    try { localStorage.setItem('panelOrder', panelOrder); } catch {}
+  }, [panelOrder]);
+
+  const handleToggleSplitView = useCallback(() => {
+    setSplitView(prev => !prev);
+  }, []);
+
+  const handleSwapPanels = useCallback(() => {
+    setPanelOrder(prev => prev === 'recipe-notes' ? 'notes-recipe' : 'recipe-notes');
+  }, []);
 
   // Check for convert query param on mount
   useEffect(() => {
@@ -404,6 +429,80 @@ export default function Index() {
     return recipe.instructions.map((inst, idx) => `${idx + 1}. ${inst}`).join('\n');
   }, [recipe.instructions]);
 
+  // Render the recipe panel (ingredients + instructions)
+  const renderRecipePanel = () => (
+    <div className="space-y-6 h-full overflow-y-auto">
+      {/* Ingredients */}
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-display">Ingredients</h2>
+          <motion.button
+            onClick={handleResetCheckboxesWithAnimation}
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+            whileTap={{ scale: 0.95 }}
+            title="Reset checkboxes"
+          >
+            <motion.div
+              animate={{ rotate: isResetSpinning ? -360 : 0 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+            >
+              <RotateCcw className="w-5 h-5" />
+            </motion.div>
+          </motion.button>
+        </div>
+
+        <IngredientList
+          sections={recipe.sections}
+          scale={scale}
+          useFractions={useFractions}
+          onToggleIngredient={handleToggleIngredient}
+          onChangeUnit={handleChangeUnit}
+          onDeleteIngredient={handleDeleteIngredient}
+          onUpdateIngredient={handleUpdateIngredient}
+          onReorderIngredients={handleReorderIngredients}
+        />
+        
+        <AddIngredientInput onAdd={handleAddIngredient} />
+      </div>
+
+      {/* Instructions section */}
+      <CollapsibleSection
+        title="Instructions"
+        placeholder="Paste recipe instructions here..."
+        value={instructionsText}
+        onChange={handleInstructionsChange}
+        renderContent={() => (
+          <InstructionsList
+            instructions={recipe.instructions}
+            onDeleteInstruction={handleDeleteInstruction}
+            onUpdateInstruction={handleUpdateInstruction}
+            onReorderInstructions={handleReorderInstructions}
+          />
+        )}
+        testId="instructions-section"
+      />
+    </div>
+  );
+
+  // Render the notes panel
+  const renderNotesPanel = () => (
+    <div className="h-full overflow-y-auto">
+      <div className="glass-card p-6 h-full">
+        <h2 className="text-xl font-display mb-4">Notes</h2>
+        <NotesList
+          notes={recipe.notes}
+          onUpdateNotes={handleNotesChange}
+        />
+        <textarea
+          value={recipe.notes}
+          onChange={(e) => handleNotesChange(e.target.value)}
+          placeholder="Add any notes about this recipe..."
+          className="w-full min-h-[120px] mt-4 p-4 rounded-xl bg-secondary/50 border border-border/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header
@@ -418,9 +517,11 @@ export default function Index() {
         onToggleTheme={toggleTheme}
         hasRecipe={hasRecipe}
         onOpenMenu={() => setIsMenuOpen(true)}
+        splitView={splitView}
+        onToggleSplitView={handleToggleSplitView}
       />
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
+      <main className={`flex-1 ${splitView && hasRecipe ? 'max-w-6xl' : 'max-w-3xl'} mx-auto w-full px-4 py-8 space-y-6`}>
         {/* Conversion Mode */}
         <AnimatePresence mode="wait">
           {isConversionMode && !hasRecipe && (
@@ -472,72 +573,51 @@ export default function Index() {
               />
             </div>
 
-            {/* Notes section - removed, now below instructions */}
-
-            {/* Ingredients */}
-            <div className="glass-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-display">Ingredients</h2>
-                <motion.button
-                  onClick={handleResetCheckboxesWithAnimation}
-                  className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                  whileTap={{ scale: 0.95 }}
-                  title="Reset checkboxes"
+            {/* Split view or single column */}
+            {splitView && !isMobile ? (
+              <div className="relative min-h-[600px]">
+                <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="h-full pr-2">
+                      {panelOrder === 'recipe-notes' ? renderRecipePanel() : renderNotesPanel()}
+                    </div>
+                  </ResizablePanel>
+                  <ResizableHandle withHandle className="mx-1" />
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="h-full pl-2">
+                      {panelOrder === 'recipe-notes' ? renderNotesPanel() : renderRecipePanel()}
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+                {/* Swap button overlay */}
+                <button
+                  onClick={handleSwapPanels}
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-10 p-2 rounded-full bg-secondary/80 hover:bg-secondary transition-colors shadow-md"
+                  title="Swap panels"
                 >
-                  <motion.div
-                    animate={{ rotate: isResetSpinning ? -360 : 0 }}
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                  </motion.div>
-                </motion.button>
+                  <ArrowLeftRight className="w-4 h-4" />
+                </button>
               </div>
-
-              <IngredientList
-                sections={recipe.sections}
-                scale={scale}
-                useFractions={useFractions}
-                onToggleIngredient={handleToggleIngredient}
-                onChangeUnit={handleChangeUnit}
-                onDeleteIngredient={handleDeleteIngredient}
-                onUpdateIngredient={handleUpdateIngredient}
-                onReorderIngredients={handleReorderIngredients}
-              />
-              
-              <AddIngredientInput onAdd={handleAddIngredient} />
-            </div>
-
-            {/* Instructions section */}
-            <CollapsibleSection
-              title="Instructions"
-              placeholder="Paste recipe instructions here..."
-              value={instructionsText}
-              onChange={handleInstructionsChange}
-              renderContent={() => (
-                <InstructionsList
-                  instructions={recipe.instructions}
-                  onDeleteInstruction={handleDeleteInstruction}
-                  onUpdateInstruction={handleUpdateInstruction}
-                  onReorderInstructions={handleReorderInstructions}
+            ) : (
+              <>
+                {renderRecipePanel()}
+                
+                {/* Notes section (non-split view) */}
+                <CollapsibleSection
+                  title="Notes"
+                  placeholder="Add any notes about this recipe..."
+                  value={recipe.notes}
+                  onChange={handleNotesChange}
+                  renderContent={() => (
+                    <NotesList
+                      notes={recipe.notes}
+                      onUpdateNotes={handleNotesChange}
+                    />
+                  )}
+                  testId="notes-section"
                 />
-              )}
-              testId="instructions-section"
-            />
-
-            {/* Notes section */}
-            <CollapsibleSection
-              title="Notes"
-              placeholder="Add any notes about this recipe..."
-              value={recipe.notes}
-              onChange={handleNotesChange}
-              renderContent={() => (
-                <NotesList
-                  notes={recipe.notes}
-                  onUpdateNotes={handleNotesChange}
-                />
-              )}
-              testId="notes-section"
-            />
+              </>
+            )}
           </motion.div>
         )}
       </main>
@@ -576,6 +656,8 @@ export default function Index() {
         onPrint={handlePrint}
         onClearRecipe={handleClearRecipe}
         isMobile={isMobile}
+        splitView={splitView}
+        onToggleSplitView={handleToggleSplitView}
       />
     </div>
   );

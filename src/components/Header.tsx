@@ -58,6 +58,8 @@ export function Header({
   onToggleTheme,
   hasRecipe,
   onOpenMenu,
+  splitView,
+  onToggleSplitView,
 }: HeaderProps) {
   return (
     <motion.header

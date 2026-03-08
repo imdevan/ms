@@ -19,6 +19,8 @@ interface SideMenuProps {
   onPrint: () => void;
   onClearRecipe: () => void;
   isMobile: boolean;
+  splitView?: boolean;
+  onToggleSplitView?: () => void;
 }
 
 const ResetButtonMenu = forwardRef<HTMLButtonElement, { onClick: () => void }>(function ResetButtonMenu({ onClick }, ref) {

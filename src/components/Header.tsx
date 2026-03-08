@@ -116,6 +116,17 @@ export function Header({
               </motion.div>
             )}
 
+            {hasRecipe && onToggleSplitView && (
+              <TooltipButton
+                onClick={onToggleSplitView}
+                tooltip={splitView ? 'Single view' : 'Side-by-side view'}
+                isActive={splitView}
+                testId="header-split-toggle"
+              >
+                {splitView ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+              </TooltipButton>
+            )}
+
             <TooltipButton
               onClick={onToggleTheme}
               tooltip={isDark ? 'Switch to light mode' : 'Switch to dark mode'}

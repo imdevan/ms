@@ -120,6 +120,27 @@ export function SideMenu({
                     Display
                   </h3>
 
+                  {/* Split view toggle */}
+                  {onToggleSplitView && (
+                    <button
+                      onClick={onToggleSplitView}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+                      data-testid="split-view-toggle"
+                    >
+                      <div className="flex items-center gap-3">
+                        <PanelLeft className="w-5 h-5" />
+                        <span>Side-by-Side</span>
+                      </div>
+                      <div className={`w-12 h-7 rounded-full transition-colors ${splitView ? 'bg-primary' : 'bg-muted'} p-1`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-card shadow-sm"
+                          animate={{ x: splitView ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </button>
+                  )}
+
                   {/* Fractions toggle */}
                   <button
                     onClick={onToggleFractions}

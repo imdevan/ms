@@ -66,6 +66,8 @@ export function SideMenu({
   onPrint,
   onClearRecipe,
   isMobile,
+  splitView,
+  onToggleSplitView,
 }: SideMenuProps) {
   return (
     <AnimatePresence>

@@ -35,6 +35,14 @@ export default function Index() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isResetSpinning, setIsResetSpinning] = useState(false);
   
+  // Split view state
+  const [splitView, setSplitView] = useState(() => {
+    try { return localStorage.getItem('splitView') === 'true'; } catch { return false; }
+  });
+  const [panelOrder, setPanelOrder] = useState<'recipe-notes' | 'notes-recipe'>(() => {
+    try { return (localStorage.getItem('panelOrder') as any) || 'recipe-notes'; } catch { return 'recipe-notes'; }
+  });
+  
   // Conversion mode state
   const [isConversionMode, setIsConversionMode] = useState(false);
   const [conversionInput, setConversionInput] = useState<ConversionInput>(loadLastConversion);

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Sun, Moon, Hash, Percent, Coffee, RotateCcw, Menu } from 'lucide-react';
+import { Sun, Moon, Hash, Percent, Coffee, RotateCcw, Menu, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { ScaleDial } from './ScaleDial';
 
 interface HeaderProps {

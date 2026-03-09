@@ -25,7 +25,7 @@ Store updates you implement at the END of this document in `# Updates`
 
 - [x] 2 keep recipe scale  and side-by-side button icon in header at all times regardless or screen size
 
-- [ ] 3 query enhancements 
+- [x] 3 query enhancements 
   accept query via url
   example: `devan.gg/meassuring-spoon?q={/*any content the user would have pasted via clipboard}`
   same as copying and pasting value into input box

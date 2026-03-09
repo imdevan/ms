@@ -70,14 +70,23 @@ export default function Index() {
     setPanelOrder(prev => prev === 'recipe-notes' ? 'notes-recipe' : 'recipe-notes');
   }, []);
 
-  // Check for convert query param on mount
+  // Check for query param on mount — treat ?q= like pasting into input
   useEffect(() => {
     const convertParam = searchParams.get('convert');
     if (convertParam === 'true' || convertParam === '1') {
       setIsConversionMode(true);
       setShowConversionPreview(false);
     }
-  }, [searchParams]);
+
+    const qParam = searchParams.get('q');
+    if (qParam) {
+      handleTextReceived(qParam);
+      // Clean up the URL by removing the q param
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('q');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, []); // Run once on mount
 
   // Load state from URL hash on mount
   useEffect(() => {

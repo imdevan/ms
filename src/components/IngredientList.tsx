@@ -78,11 +78,11 @@ function SortableIngredient({
 
   if (isEditing) {
     return (
-      <div ref={setNodeRef} style={style} className="flex items-stretch gap-1 group">
-        <div className="flex items-center px-1 py-2 text-muted-foreground/30 opacity-0">
+      <div ref={setNodeRef} style={style} className="relative group">
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center px-1 py-2 text-muted-foreground/30 opacity-0">
           <GripVertical className="w-4 h-4" />
         </div>
-        <div className="flex-1 p-2 rounded-xl bg-secondary/30">
+        <div className="w-full p-2 rounded-xl bg-secondary/30">
           <EditableItem
             value={ingredient.original}
             isEditing={true}
@@ -97,18 +97,16 @@ function SortableIngredient({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-stretch gap-1 group">
+    <div ref={setNodeRef} style={style} className="relative group">
       <button
-        className="flex items-center px-1 py-2 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center px-1 py-2 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 transition-opacity z-10"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="w-4 h-4" />
       </button>
-      <div className="flex-1" {...handlers}>
-        <SwipeToDelete
-          onDelete={() => onDeleteIngredient?.(sectionId, ingredient.id)}
-        >
+      <div className="w-full" {...handlers}>
+        <SwipeToDelete onDelete={() => onDeleteIngredient?.(sectionId, ingredient.id)}>
           <IngredientRow
             ingredient={ingredient}
             scale={scale}

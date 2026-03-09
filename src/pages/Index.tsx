@@ -582,21 +582,22 @@ export default function Index() {
                       {panelOrder === 'recipe-notes' ? renderIngredientsNotesPanel() : renderInstructionsPanel()}
                     </div>
                   </ResizablePanel>
-                  <ResizableHandle withHandle className="mx-1" />
+                  <ResizableHandle withHandle className="relative mx-1">
+                    {/* Swap button integrated with resize handle */}
+                    <button
+                      onClick={handleSwapPanels}
+                      className="absolute top-4 left-1/2 -translate-x-1/2 z-10 p-2 rounded-full bg-secondary/80 hover:bg-secondary transition-colors shadow-md"
+                      title="Swap panels"
+                    >
+                      <ArrowLeftRight className="w-4 h-4" />
+                    </button>
+                  </ResizableHandle>
                   <ResizablePanel defaultSize={50} minSize={30}>
                     <div className="h-full pl-2">
                       {panelOrder === 'recipe-notes' ? renderInstructionsPanel() : renderIngredientsNotesPanel()}
                     </div>
                   </ResizablePanel>
                 </ResizablePanelGroup>
-                {/* Swap button overlay */}
-                <button
-                  onClick={handleSwapPanels}
-                  className="absolute top-4 left-1/2 -translate-x-1/2 z-10 p-2 rounded-full bg-secondary/80 hover:bg-secondary transition-colors shadow-md"
-                  title="Swap panels"
-                >
-                  <ArrowLeftRight className="w-4 h-4" />
-                </button>
               </div>
             ) : (
               <>

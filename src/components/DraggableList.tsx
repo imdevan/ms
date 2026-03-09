@@ -43,15 +43,15 @@ export function SortableItem({ id, children, isDragging }: SortableItemProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-stretch gap-1 group">
+    <div ref={setNodeRef} style={style} className="relative group">
       <button
-        className="flex items-center px-1 py-2 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full flex items-center px-1 py-2 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 transition-opacity z-10"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="w-4 h-4" />
       </button>
-      <div className="flex-1">{children}</div>
+      {children}
     </div>
   );
 }

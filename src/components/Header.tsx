@@ -148,9 +148,18 @@ export function Header({
           {/* Mobile controls */}
           <div className="flex md:hidden items-center gap-2">
             {hasRecipe && (
-              <div className="flex items-center gap-2 mr-2">
-                <span className="text-sm font-medium">{scale}×</span>
-              </div>
+              <>
+                <ScaleDial value={scale} onChange={onScaleChange} size="sm" />
+                {onToggleSplitView && (
+                  <TooltipButton
+                    onClick={onToggleSplitView}
+                    tooltip={splitView ? 'Single view' : 'Side-by-side view'}
+                    isActive={splitView}
+                  >
+                    {splitView ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+                  </TooltipButton>
+                )}
+              </>
             )}
             <TooltipButton
               onClick={onToggleTheme}

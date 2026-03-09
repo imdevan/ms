@@ -43,6 +43,12 @@ export default function Index() {
   const [panelOrder, setPanelOrder] = useState<'recipe-notes' | 'notes-recipe'>(() => {
     try { return (localStorage.getItem('panelOrder') as any) || 'recipe-notes'; } catch { return 'recipe-notes'; }
   });
+  const [panelSizes, setPanelSizes] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('panelSizes');
+      return saved ? JSON.parse(saved) : [50, 50];
+    } catch { return [50, 50]; }
+  });
   
   // Conversion mode state
   const [isConversionMode, setIsConversionMode] = useState(false);

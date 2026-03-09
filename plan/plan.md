@@ -23,7 +23,7 @@ Store updates you implement at the END of this document in `# Updates`
       - clickable area between the two can be used to resize both sides simultaneously
       - if so save to local state  
 
-- [ ] 2 keep recipe scale  and side-by-side button icon in header at all times regardless or screen size
+- [x] 2 keep recipe scale  and side-by-side button icon in header at all times regardless or screen size
 
 - [ ] 3 query enhancements 
   accept query via url

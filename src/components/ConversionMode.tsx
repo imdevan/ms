@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Copy, Check, X } from 'lucide-react';
+import { Copy, Check, X, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   UNITS, 
@@ -19,7 +20,6 @@ interface ConversionModeProps {
   useFractions: boolean;
 }
 
-// All volume + weight unit keys for the "From" selector
 const ALL_CONVERTIBLE_UNITS = Object.entries(UNITS)
   .filter(([, u]) => u.category === 'volume' || u.category === 'weight')
   .map(([key]) => key);
@@ -28,7 +28,10 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
   const [copiedUnit, setCopiedUnit] = useState<string | null>(null);
   const [editingUnit, setEditingUnit] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
-  const activeFromRef = useRef<HTMLButtonElement>(null);
+  const [isFromDropdownOpen, setIsFromDropdownOpen] = useState(false);
+  const fromButtonRef = useRef<HTMLButtonElement>(null);
+  const fromDropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const preferImperial = isImperialUnit(input.unit);
   const compatibleUnits = useMemo(() => 
@@ -36,17 +39,36 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
     [input.unit, preferImperial]
   );
 
-  // Save to localStorage when input changes
   useEffect(() => {
     saveLastConversion(input);
   }, [input]);
 
-  // Scroll active "from" unit into view
+  // Position dropdown when opened
   useEffect(() => {
-    activeFromRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [input.unit]);
+    if (isFromDropdownOpen && fromButtonRef.current) {
+      const rect = fromButtonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+  }, [isFromDropdownOpen]);
 
-  // Get all conversions
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!isFromDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        fromDropdownRef.current && !fromDropdownRef.current.contains(e.target as Node) &&
+        fromButtonRef.current && !fromButtonRef.current.contains(e.target as Node)
+      ) {
+        setIsFromDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isFromDropdownOpen]);
+
   const conversions = useMemo(() => {
     return compatibleUnits.map(unitKey => {
       const converted = convertUnit(input.quantity, input.unit, unitKey);
@@ -79,7 +101,6 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
   const handleEditComplete = useCallback((unitKey: string) => {
     const parsed = fractionToDecimal(editValue);
     if (parsed !== null && parsed > 0) {
-      // Convert back to original unit
       const newOriginalValue = convertUnit(parsed, unitKey, input.unit);
       if (newOriginalValue !== null) {
         onInputChange({ ...input, quantity: newOriginalValue });
@@ -97,10 +118,13 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
   }, [input, onInputChange]);
 
   const handleSelectFromUnit = useCallback((unitKey: string) => {
-    if (unitKey === input.unit) return;
-    // Keep quantity, change unit
-    onInputChange({ ...input, unit: unitKey });
+    if (unitKey !== input.unit) {
+      onInputChange({ ...input, unit: unitKey });
+    }
+    setIsFromDropdownOpen(false);
   }, [input, onInputChange]);
+
+  const inputUnitInfo = UNITS[input.unit];
 
   return (
     <motion.div
@@ -109,7 +133,6 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
-      {/* Header with close button */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-display">Unit Converter</h2>
         <motion.button
@@ -122,45 +145,77 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
       </div>
 
       <div className="flex gap-8 items-start">
-        {/* Left side - Input with scrollable unit selector */}
+        {/* Left side - Input with dropdown unit selector */}
         <div className="flex-shrink-0 w-48">
           <div className="space-y-2">
             <label className="text-sm text-muted-foreground">From</label>
-            <div className="mb-3">
+            <div className="flex items-baseline gap-2">
               <input
                 type="text"
                 value={formatNumber(input.quantity, useFractions)}
                 onChange={(e) => handleInputQuantityChange(e.target.value)}
-                className="w-full text-3xl font-display bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none text-center transition-colors"
+                className="w-20 text-3xl font-display bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none text-center transition-colors"
               />
-            </div>
-            <div className="max-h-[340px] overflow-y-auto conversion-dropdown pr-1 space-y-0.5">
-              {ALL_CONVERTIBLE_UNITS.map((unitKey) => {
-                const unitInfo = UNITS[unitKey];
-                const isActive = unitKey === input.unit;
-                const category = unitInfo?.category;
-
-                return (
-                  <motion.button
-                    key={unitKey}
-                    ref={isActive ? activeFromRef : undefined}
-                    onClick={() => handleSelectFromUnit(unitKey)}
-                    className={`w-full text-left py-2 px-3 rounded-lg transition-colors text-sm ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground font-medium'
-                        : 'hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
-                    }`}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    <span>{unitInfo?.name || unitKey}</span>
-                    {category === 'weight' && !isActive && (
-                      <span className="text-xs text-muted-foreground/50 ml-1">(weight)</span>
-                    )}
-                  </motion.button>
-                );
-              })}
+              <button
+                ref={fromButtonRef}
+                onClick={() => setIsFromDropdownOpen(!isFromDropdownOpen)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <span>{inputUnitInfo?.name || input.unit}</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
             </div>
           </div>
+
+          {/* Unit dropdown portal */}
+          {isFromDropdownOpen && typeof document !== 'undefined' && createPortal(
+            <motion.div
+              ref={fromDropdownRef}
+              className="fixed bg-card border border-border rounded-xl shadow-card z-50 min-w-[180px] py-1 overflow-hidden max-h-72 overflow-y-auto conversion-dropdown"
+              style={{
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+              }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            >
+              <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider bg-secondary/30">
+                Volume
+              </div>
+              {ALL_CONVERTIBLE_UNITS
+                .filter(k => UNITS[k].category === 'volume')
+                .map(unitKey => (
+                  <button
+                    key={unitKey}
+                    onClick={() => handleSelectFromUnit(unitKey)}
+                    className={`w-full px-4 py-2 text-left hover:bg-secondary flex items-center transition-colors ${
+                      unitKey === input.unit ? 'bg-secondary/30 font-medium' : ''
+                    }`}
+                  >
+                    <span>{UNITS[unitKey].name}</span>
+                  </button>
+                ))}
+
+              <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider bg-secondary/30 mt-1">
+                Weight
+              </div>
+              {ALL_CONVERTIBLE_UNITS
+                .filter(k => UNITS[k].category === 'weight')
+                .map(unitKey => (
+                  <button
+                    key={unitKey}
+                    onClick={() => handleSelectFromUnit(unitKey)}
+                    className={`w-full px-4 py-2 text-left hover:bg-secondary flex items-center transition-colors ${
+                      unitKey === input.unit ? 'bg-secondary/30 font-medium' : ''
+                    }`}
+                  >
+                    <span>{UNITS[unitKey].name}</span>
+                  </button>
+                ))}
+            </motion.div>,
+            document.body
+          )}
         </div>
 
         {/* Right side - Scrollable conversions */}

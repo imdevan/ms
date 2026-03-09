@@ -31,7 +31,7 @@ Store updates you implement at the END of this document in `# Updates`
 - [x] 4 Add section under notes to show the link to the source
 
 
-- [ ] 5 unit converter update
+- [x] 5 unit converter update
   - click on left unit to be able to change which the current unit that is being converted
 
   Alternative: have the left be scrollable like the right is. But only the unit not the value

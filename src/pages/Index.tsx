@@ -574,7 +574,7 @@ export default function Index() {
             </div>
 
             {/* Split view or single column */}
-            {splitView && !isMobile ? (
+            {splitView ? (
               <div className="relative min-h-[600px]">
                 <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
                   <ResizablePanel defaultSize={50} minSize={30}>

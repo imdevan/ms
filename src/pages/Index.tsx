@@ -68,6 +68,13 @@ export default function Index() {
   useEffect(() => {
     try { localStorage.setItem('panelOrder', panelOrder); } catch {}
   }, [panelOrder]);
+  useEffect(() => {
+    try { localStorage.setItem('panelSizes', JSON.stringify(panelSizes)); } catch {}
+  }, [panelSizes]);
+
+  const handlePanelLayout = useCallback((sizes: number[]) => {
+    setPanelSizes(sizes);
+  }, []);
 
   const handleToggleSplitView = useCallback(() => {
     setSplitView(prev => !prev);

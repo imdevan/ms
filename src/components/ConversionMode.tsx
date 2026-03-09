@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,10 +19,16 @@ interface ConversionModeProps {
   useFractions: boolean;
 }
 
+// All volume + weight unit keys for the "From" selector
+const ALL_CONVERTIBLE_UNITS = Object.entries(UNITS)
+  .filter(([, u]) => u.category === 'volume' || u.category === 'weight')
+  .map(([key]) => key);
+
 export function ConversionMode({ input, onInputChange, onClose, useFractions }: ConversionModeProps) {
   const [copiedUnit, setCopiedUnit] = useState<string | null>(null);
   const [editingUnit, setEditingUnit] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const activeFromRef = useRef<HTMLButtonElement>(null);
 
   const preferImperial = isImperialUnit(input.unit);
   const compatibleUnits = useMemo(() => 
@@ -34,6 +40,11 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
   useEffect(() => {
     saveLastConversion(input);
   }, [input]);
+
+  // Scroll active "from" unit into view
+  useEffect(() => {
+    activeFromRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [input.unit]);
 
   // Get all conversions
   const conversions = useMemo(() => {
@@ -85,7 +96,11 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
     }
   }, [input, onInputChange]);
 
-  const inputUnitInfo = UNITS[input.unit];
+  const handleSelectFromUnit = useCallback((unitKey: string) => {
+    if (unitKey === input.unit) return;
+    // Keep quantity, change unit
+    onInputChange({ ...input, unit: unitKey });
+  }, [input, onInputChange]);
 
   return (
     <motion.div
@@ -107,20 +122,43 @@ export function ConversionMode({ input, onInputChange, onClose, useFractions }: 
       </div>
 
       <div className="flex gap-8 items-start">
-        {/* Left side - Input */}
+        {/* Left side - Input with scrollable unit selector */}
         <div className="flex-shrink-0 w-48">
           <div className="space-y-2">
             <label className="text-sm text-muted-foreground">From</label>
-            <div className="flex items-baseline gap-2">
+            <div className="mb-3">
               <input
                 type="text"
                 value={formatNumber(input.quantity, useFractions)}
                 onChange={(e) => handleInputQuantityChange(e.target.value)}
-                className="w-20 text-3xl font-display bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none text-center transition-colors"
+                className="w-full text-3xl font-display bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none text-center transition-colors"
               />
-              <span className="text-xl text-muted-foreground">
-                {inputUnitInfo?.name || input.unit}
-              </span>
+            </div>
+            <div className="max-h-[340px] overflow-y-auto conversion-dropdown pr-1 space-y-0.5">
+              {ALL_CONVERTIBLE_UNITS.map((unitKey) => {
+                const unitInfo = UNITS[unitKey];
+                const isActive = unitKey === input.unit;
+                const category = unitInfo?.category;
+
+                return (
+                  <motion.button
+                    key={unitKey}
+                    ref={isActive ? activeFromRef : undefined}
+                    onClick={() => handleSelectFromUnit(unitKey)}
+                    className={`w-full text-left py-2 px-3 rounded-lg transition-colors text-sm ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
+                    }`}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <span>{unitInfo?.name || unitKey}</span>
+                    {category === 'weight' && !isActive && (
+                      <span className="text-xs text-muted-foreground/50 ml-1">(weight)</span>
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </div>

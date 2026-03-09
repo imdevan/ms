@@ -1,16 +1,35 @@
 import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Clipboard, ArrowRight, Plus } from 'lucide-react';
+import { Upload, Clipboard, ArrowRight, Plus, Link, Loader2 } from 'lucide-react';
+import { isUrl, scrapeRecipeFromUrl, type ScrapedRecipe } from '@/lib/scraper';
+import { toast } from 'sonner';
 
 interface DropZoneProps {
   onTextReceived: (text: string) => void;
+  onRecipeScraped?: (scraped: ScrapedRecipe) => void;
   isEmpty: boolean;
 }
 
-export function DropZone({ onTextReceived, isEmpty }: DropZoneProps) {
+export function DropZone({ onTextReceived, onRecipeScraped, isEmpty }: DropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [pasteText, setPasteText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleSubmitUrl = useCallback(async (url: string) => {
+    if (!onRecipeScraped) return;
+    setIsLoading(true);
+    try {
+      const scraped = await scrapeRecipeFromUrl(url);
+      onRecipeScraped(scraped);
+      setPasteText('');
+      toast.success('Recipe imported successfully!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to fetch recipe from URL');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onRecipeScraped]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -31,39 +50,49 @@ export function DropZone({ onTextReceived, isEmpty }: DropZoneProps) {
 
     const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
     if (text) {
-      onTextReceived(text);
+      if (isUrl(text) && onRecipeScraped) {
+        handleSubmitUrl(text);
+      } else {
+        onTextReceived(text);
+      }
     }
-  }, [onTextReceived]);
+  }, [onTextReceived, onRecipeScraped, handleSubmitUrl]);
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     if (isEmpty) {
       e.preventDefault();
       const text = e.clipboardData.getData('text');
       if (text) {
-        onTextReceived(text);
+        if (isUrl(text.trim()) && onRecipeScraped) {
+          handleSubmitUrl(text.trim());
+        } else {
+          onTextReceived(text);
+        }
       }
     }
-  }, [isEmpty, onTextReceived]);
+  }, [isEmpty, onTextReceived, onRecipeScraped, handleSubmitUrl]);
 
   const handleSubmit = useCallback(() => {
-    if (pasteText.trim()) {
-      onTextReceived(pasteText.trim());
+    const trimmed = pasteText.trim();
+    if (!trimmed) return;
+    
+    if (isUrl(trimmed) && onRecipeScraped) {
+      handleSubmitUrl(trimmed);
+    } else {
+      onTextReceived(trimmed);
       setPasteText('');
     }
-  }, [pasteText, onTextReceived]);
+  }, [pasteText, onTextReceived, onRecipeScraped, handleSubmitUrl]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Submit on cmd/ctrl+enter or shift+enter
     if ((e.metaKey || e.ctrlKey || e.shiftKey) && e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();
     }
   }, [handleSubmit]);
 
-  // Global paste handler for empty state
   const handleGlobalPaste = useCallback((e: React.ClipboardEvent) => {
     const target = e.target as HTMLElement;
-    // Don't intercept if user is typing in notes or instructions
     if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
       if (target.closest('[data-no-global-paste]')) {
         return;
@@ -74,14 +103,20 @@ export function DropZone({ onTextReceived, isEmpty }: DropZoneProps) {
       const text = e.clipboardData.getData('text');
       if (text) {
         e.preventDefault();
-        onTextReceived(text);
+        if (isUrl(text.trim()) && onRecipeScraped) {
+          handleSubmitUrl(text.trim());
+        } else {
+          onTextReceived(text);
+        }
       }
     }
-  }, [isEmpty, onTextReceived]);
+  }, [isEmpty, onTextReceived, onRecipeScraped, handleSubmitUrl]);
 
   if (!isEmpty) {
     return null;
   }
+
+  const inputLooksLikeUrl = isUrl(pasteText.trim());
 
   return (
     <motion.div
@@ -98,9 +133,12 @@ export function DropZone({ onTextReceived, isEmpty }: DropZoneProps) {
       <div className="flex flex-col items-center gap-6 text-center">
         <motion.div
           className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center"
-          animate={isDragOver ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
+          animate={isDragOver ? { scale: 1.1, rotate: 5 } : isLoading ? { scale: [1, 1.05, 1] } : { scale: 1, rotate: 0 }}
+          transition={isLoading ? { repeat: Infinity, duration: 1.5 } : undefined}
         >
-          {isDragOver ? (
+          {isLoading ? (
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          ) : isDragOver ? (
             <Upload className="w-10 h-10 text-primary" />
           ) : (
             <Clipboard className="w-10 h-10 text-primary" />
@@ -108,40 +146,56 @@ export function DropZone({ onTextReceived, isEmpty }: DropZoneProps) {
         </motion.div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl">Paste your recipe</h2>
+          <h2 className="text-2xl">{isLoading ? 'Fetching recipe...' : 'Paste your recipe'}</h2>
           <p className="text-muted-foreground max-w-md">
-            Drop or paste any ingredient list and watch it transform into an adjustable recipe
+            {isLoading 
+              ? 'Importing ingredients, instructions, and notes from the page'
+              : 'Paste a recipe URL or ingredient list to get started'
+            }
           </p>
         </div>
 
-        <div className="w-full max-w-md space-y-4">
-          <textarea
-            ref={textareaRef}
-            value={pasteText}
-            onChange={(e) => setPasteText(e.target.value)}
-            onPaste={handlePaste}
-            onKeyDown={handleKeyDown}
-            placeholder="Paste ingredients here..."
-            className="w-full h-40 p-4 rounded-xl bg-secondary/50 border border-border/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-            data-testid="paste-textarea"
-          />
+        {!isLoading && (
+          <div className="w-full max-w-md space-y-4">
+            <textarea
+              ref={textareaRef}
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              onPaste={handlePaste}
+              onKeyDown={handleKeyDown}
+              placeholder="Paste a recipe URL or ingredients here..."
+              className="w-full h-40 p-4 rounded-xl bg-secondary/50 border border-border/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+              data-testid="paste-textarea"
+            />
 
-          <motion.button
-            onClick={handleSubmit}
-            disabled={!pasteText.trim()}
-            className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            whileHover={pasteText.trim() ? { scale: 1.02 } : undefined}
-            whileTap={pasteText.trim() ? { scale: 0.98 } : undefined}
-            data-testid="parse-button"
-          >
-            <span>Parse Ingredients</span>
-            <ArrowRight className="w-5 h-5" />
-          </motion.button>
-        </div>
+            <motion.button
+              onClick={handleSubmit}
+              disabled={!pasteText.trim()}
+              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={pasteText.trim() ? { scale: 1.02 } : undefined}
+              whileTap={pasteText.trim() ? { scale: 0.98 } : undefined}
+              data-testid="parse-button"
+            >
+              {inputLooksLikeUrl ? (
+                <>
+                  <Link className="w-5 h-5" />
+                  <span>Import from URL</span>
+                </>
+              ) : (
+                <>
+                  <span>Parse Ingredients</span>
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </motion.button>
+          </div>
+        )}
 
-        <p className="text-sm text-muted-foreground">
-          Tip: You can also drag text directly from any website
-        </p>
+        {!isLoading && (
+          <p className="text-sm text-muted-foreground">
+            Tip: You can also drag text directly from any website
+          </p>
+        )}
       </div>
     </motion.div>
   );

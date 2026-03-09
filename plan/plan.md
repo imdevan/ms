@@ -25,18 +25,13 @@ Store updates you implement at the END of this document in `# Updates`
 
 - [x] 2 keep recipe scale  and side-by-side button icon in header at all times regardless or screen size
 
-- [ ] 3 query enhancements 
-  accept query via url
-  example: `devan.gg/meassuring-spoon?q={/*any content the user would have pasted via clipboard}`
-  same as copying and pasting value into input box
-
-- [ ] 4 accept url as query 
+- [x] 3 accept url as query 
   example: `devan.gg/meassuring-spoon?q=recipe_url`
 
-- [ ] 5 Add section under notes to show the link to the source
+- [x] 4 Add section under notes to show the link to the source
 
 
-- [ ] 6 unit converter update
+- [ ] 5 unit converter update
   - click on left unit to be able to change which the current unit that is being converted
 
   Alternative: have the left be scrollable like the right is. But only the unit not the value

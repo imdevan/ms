@@ -61,6 +61,7 @@ export function Header({
   onOpenMenu,
   splitView,
   onToggleSplitView,
+  onOpenConverter,
 }: HeaderProps) {
   return (
     <motion.header

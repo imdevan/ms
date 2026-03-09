@@ -135,6 +135,19 @@ export default function Index() {
     setShowConversionPreview(false);
   }, []);
 
+  const handleRecipeScraped = useCallback((scraped: ScrapedRecipe) => {
+    const { recipe: scrapedRecipe, sourceUrl } = scraped;
+    // Prepend source URL to notes
+    const urlNote = `Source: ${sourceUrl}`;
+    const existingNotes = scrapedRecipe.notes ? scrapedRecipe.notes.trim() : '';
+    scrapedRecipe.notes = existingNotes ? `${urlNote}\n${existingNotes}` : urlNote;
+    
+    setRecipe(scrapedRecipe);
+    setScale(1);
+    setIsConversionMode(false);
+    setShowConversionPreview(false);
+  }, []);
+
   const handleScaleChange = useCallback((newScale: number) => {
     const clamped = Math.max(0.01, Math.min(100, newScale));
     setScale(clamped);

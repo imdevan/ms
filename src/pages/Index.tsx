@@ -431,13 +431,33 @@ export default function Index() {
     return recipe.instructions.map((inst, idx) => `${idx + 1}. ${inst}`).join('\n');
   }, [recipe.instructions]);
 
+  // Drag handle for panels
+  const ingredientsNotesLongPress = useLongPress({
+    onLongPress: handleSwapPanels,
+    onClick: handleSwapPanels,
+    delay: 500,
+  });
+
+  const instructionsLongPress = useLongPress({
+    onLongPress: handleSwapPanels,
+    onClick: handleSwapPanels,
+    delay: 500,
+  });
+
   // Render the ingredients + notes panel
   const renderIngredientsNotesPanel = () => (
     <div className="space-y-6 h-full overflow-y-auto">
       {/* Ingredients */}
       <div className="glass-card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-display">Ingredients</h2>
+        {/* Draggable header */}
+        <div 
+          className="flex items-center justify-between mb-4 cursor-grab active:cursor-grabbing select-none"
+          {...ingredientsNotesLongPress.handlers}
+        >
+          <div className="flex items-center gap-2">
+            <GripHorizontal className={`w-5 h-5 transition-colors ${ingredientsNotesLongPress.isPressed ? 'text-primary' : 'text-muted-foreground/30'}`} />
+            <h2 className="text-xl font-display">Ingredients</h2>
+          </div>
           <motion.button
             onClick={handleResetCheckboxesWithAnimation}
             className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"

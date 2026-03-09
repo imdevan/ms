@@ -629,8 +629,8 @@ export default function Index() {
             {/* Split view or single column */}
             {splitView ? (
               <div className="relative min-h-[600px]">
-                <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
-                  <ResizablePanel defaultSize={50} minSize={30}>
+                <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg" onLayout={handlePanelLayout}>
+                  <ResizablePanel defaultSize={panelSizes[0]} minSize={30}>
                     <div className="h-full pr-2">
                       {panelOrder === 'recipe-notes' ? renderIngredientsNotesPanel() : renderInstructionsPanel()}
                     </div>
@@ -644,7 +644,7 @@ export default function Index() {
                       <ArrowLeftRight className="w-4 h-4" />
                     </button>
                   </ResizableHandle>
-                  <ResizablePanel defaultSize={50} minSize={30}>
+                  <ResizablePanel defaultSize={panelSizes[1]} minSize={30}>
                     <div className="h-full pl-2">
                       {panelOrder === 'recipe-notes' ? renderInstructionsPanel() : renderIngredientsNotesPanel()}
                     </div>

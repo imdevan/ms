@@ -111,6 +111,7 @@ export default function Index() {
         setSearchParams((prev) => {
           const next = new URLSearchParams(prev);
           next.delete('recipe');
+          next.delete('r');
           return next;
         }, { replace: true });
         toast.success('Recipe imported successfully!');

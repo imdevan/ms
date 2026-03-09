@@ -69,6 +69,7 @@ export default function Index() {
 
   const handleSwapPanels = useCallback(() => {
     setPanelOrder(prev => prev === 'recipe-notes' ? 'notes-recipe' : 'recipe-notes');
+    toast.success('Panels swapped');
   }, []);
 
   // Check for convert query param on mount

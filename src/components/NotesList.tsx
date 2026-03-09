@@ -40,6 +40,30 @@ function NoteItem({
     );
   }
 
+  // Render note text with clickable links
+  const renderNoteText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline underline-offset-2 hover:text-primary/80 break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   return (
     <motion.div
       className={`p-4 rounded-xl bg-secondary/30 cursor-pointer transition-colors select-none ${
@@ -49,7 +73,7 @@ function NoteItem({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
     >
-      <p className="whitespace-pre-wrap">{note}</p>
+      <p className="whitespace-pre-wrap">{renderNoteText(note)}</p>
     </motion.div>
   );
 }

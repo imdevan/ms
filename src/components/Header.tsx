@@ -118,6 +118,16 @@ export function Header({
               </motion.div>
             )}
 
+            {hasRecipe && onOpenConverter && (
+              <TooltipButton
+                onClick={onOpenConverter}
+                tooltip="Unit converter"
+                testId="header-converter-toggle"
+              >
+                <Scale className="w-4 h-4" />
+              </TooltipButton>
+            )}
+
             {hasRecipe && onToggleSplitView && (
               <TooltipButton
                 onClick={onToggleSplitView}

@@ -582,8 +582,7 @@ export default function Index() {
                       {panelOrder === 'recipe-notes' ? renderIngredientsNotesPanel() : renderInstructionsPanel()}
                     </div>
                   </ResizablePanel>
-                  <div className="relative mx-1 flex items-start">
-                    <ResizableHandle withHandle />
+                  <ResizableHandle withHandle className="relative mx-1">
                     <button
                       onClick={handleSwapPanels}
                       className="absolute top-4 left-1/2 -translate-x-1/2 z-10 p-2 rounded-full bg-secondary/80 hover:bg-secondary transition-colors shadow-md"
@@ -591,7 +590,7 @@ export default function Index() {
                     >
                       <ArrowLeftRight className="w-4 h-4" />
                     </button>
-                  </div>
+                  </ResizableHandle>
                   <ResizablePanel defaultSize={50} minSize={30}>
                     <div className="h-full pl-2">
                       {panelOrder === 'recipe-notes' ? renderInstructionsPanel() : renderIngredientsNotesPanel()}

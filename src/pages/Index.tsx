@@ -507,21 +507,29 @@ export default function Index() {
   // Render the instructions panel
   const renderInstructionsPanel = () => (
     <div className="h-full overflow-y-auto">
-      <CollapsibleSection
-        title="Instructions"
-        placeholder="Paste recipe instructions here..."
-        value={instructionsText}
-        onChange={handleInstructionsChange}
-        renderContent={() => (
-          <InstructionsList
-            instructions={recipe.instructions}
-            onDeleteInstruction={handleDeleteInstruction}
-            onUpdateInstruction={handleUpdateInstruction}
-            onReorderInstructions={handleReorderInstructions}
-          />
-        )}
-        testId="instructions-section"
-      />
+      <div className="glass-card p-6">
+        {/* Draggable header */}
+        <div 
+          className="flex items-center gap-2 mb-4 cursor-grab active:cursor-grabbing select-none"
+          {...instructionsLongPress.handlers}
+        >
+          <GripHorizontal className={`w-5 h-5 transition-colors ${instructionsLongPress.isPressed ? 'text-primary' : 'text-muted-foreground/30'}`} />
+          <h2 className="text-xl font-display">Instructions</h2>
+        </div>
+        
+        <InstructionsList
+          instructions={recipe.instructions}
+          onDeleteInstruction={handleDeleteInstruction}
+          onUpdateInstruction={handleUpdateInstruction}
+          onReorderInstructions={handleReorderInstructions}
+        />
+        <textarea
+          value={instructionsText}
+          onChange={handleInstructionsChange}
+          placeholder="Paste recipe instructions here..."
+          className="w-full min-h-[120px] mt-4 p-4 rounded-xl bg-secondary/50 border border-border/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+        />
+      </div>
     </div>
   );
 

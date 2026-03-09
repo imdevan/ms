@@ -558,12 +558,13 @@ export default function Index() {
         onOpenMenu={() => setIsMenuOpen(true)}
         splitView={splitView}
         onToggleSplitView={handleToggleSplitView}
+        onOpenConverter={hasRecipe ? handleOpenConversionMode : undefined}
       />
 
       <main className={`flex-1 ${splitView && hasRecipe ? 'max-w-6xl' : 'max-w-3xl'} mx-auto w-full px-4 py-8 space-y-6`}>
         {/* Conversion Mode */}
         <AnimatePresence mode="wait">
-          {isConversionMode && !hasRecipe && (
+          {isConversionMode && (
             <ConversionMode
               input={conversionInput}
               onInputChange={handleConversionInputChange}
